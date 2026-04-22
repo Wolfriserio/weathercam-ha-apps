@@ -1,0 +1,25 @@
+name: "Weathercam Timelapse"
+version: "1.1.0"
+slug: "weathercam_timelapse"
+description: "Builds daily weathercam timelapse MP4 files and thumbnails from snapshots"
+arch:
+  - aarch64
+  - amd64
+
+startup: application
+boot: manual
+init: false
+
+map:
+  - type: media
+    read_only: false
+
+options:
+  date: ""
+  framerate: 12
+  min_images: 10
+
+schema:
+  date: "str?"
+  framerate: "int(1,60)?"
+  min_images: "int(1,1000)?"
