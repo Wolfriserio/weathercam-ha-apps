@@ -135,6 +135,51 @@ New years, months, and days appear automatically after reopening or refreshing t
 
 ---
 
+## Lovelace integration
+
+The Weathercam Calendar app can also be embedded directly into a Home Assistant dashboard.
+
+### Full calendar view
+
+Use a manual card with one of the following examples.
+
+#### Option 1: iframe
+
+```yaml
+type: iframe
+url: /app/local_weathercam_calendar
+aspect_ratio: 75%
+```
+
+#### Option 2: webpage
+
+```yaml
+type: webpage
+url: /app/local_weathercam_calendar
+aspect_ratio: 75%
+```
+
+### Simple launcher button
+
+If you prefer a compact shortcut card, you can use:
+
+```yaml
+type: button
+name: Weathercam Calendar
+icon: mdi:calendar-month
+tap_action:
+  action: navigate
+  navigation_path: /app/local_weathercam_calendar
+```
+
+### Notes
+
+- `iframe` and `webpage` behavior may vary depending on the Home Assistant frontend version
+- If one card type does not work properly, try the other one
+- The path `/app/local_weathercam_calendar` opens the installed Weathercam Calendar app directly inside Home Assistant
+
+---
+
 ## Notes
 
 - The calendar only highlights days where a matching `.mp4` file exists
@@ -268,6 +313,51 @@ In der App-Konfiguration kann der Standardpfad in der Regel unverändert bleiben
 
 Die Kalender-App liest diese Ordnerstruktur automatisch ein.  
 Neue Jahre, Monate und Tage erscheinen automatisch, sobald die App neu geöffnet oder aktualisiert wird.
+
+---
+
+## Lovelace-Integration
+
+Die Weathercam-Calendar-App kann auch direkt in ein Home-Assistant-Dashboard eingebettet werden.
+
+### Vollständige Kalenderansicht
+
+Verwende dazu eine manuelle Karte mit einem der folgenden Beispiele.
+
+#### Option 1: iframe
+
+```yaml
+type: iframe
+url: /app/local_weathercam_calendar
+aspect_ratio: 75%
+```
+
+#### Option 2: webpage
+
+```yaml
+type: webpage
+url: /app/local_weathercam_calendar
+aspect_ratio: 75%
+```
+
+### Einfacher Start-Button
+
+Wenn du lieber nur eine kompakte Schnellzugriffs-Karte möchtest, kannst du Folgendes verwenden:
+
+```yaml
+type: button
+name: Weathercam Kalender
+icon: mdi:calendar-month
+tap_action:
+  action: navigate
+  navigation_path: /app/local_weathercam_calendar
+```
+
+### Hinweise zur Lovelace-Integration
+
+- Das Verhalten von `iframe` und `webpage` kann je nach Home-Assistant-Frontend-Version leicht variieren
+- Wenn ein Kartentyp nicht sauber funktioniert, probiere den anderen
+- Der Pfad `/app/local_weathercam_calendar` öffnet die installierte Weathercam-Calendar-App direkt innerhalb von Home Assistant
 
 ---
 
