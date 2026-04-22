@@ -2,19 +2,31 @@
 
 A polished two-app package for **Home Assistant** that turns weather camera snapshots into daily timelapse videos and presents them in a built-in **calendar-style viewer**.
 
-## What this repository contains
+The idea behind this project was simple:  
+**Ecowitt only keeps timelapse videos for a few days**, so I wanted a local Home Assistant based alternative with long-term storage, automatic daily processing, and a much nicer way to browse older recordings.
+
+---
+
+# English
+
+## Overview
+
+This repository contains two Home Assistant apps:
 
 ### 1. Weathercam Timelapse
-Builds a daily timelapse from snapshots and stores it in a clean archive structure.
+Builds a daily timelapse from weather camera snapshots and stores it in a clean archive structure.
 
-Features:
-- creates one **MP4 per day**
+**Features**
+- creates one **MP4 video per day**
 - creates one **thumbnail JPG per day**
 - supports a configurable minimum image count
 - works well with 5-minute snapshot automations
+- stores output in a structured archive by **year / month / day**
 
 ### 2. Weathercam Calendar
-Provides an **Ingress UI inside Home Assistant** with:
+Provides a built-in **Ingress UI inside Home Assistant** for browsing timelapse videos.
+
+**Features**
 - **year selection**
 - **month selection**
 - clickable **calendar view**
@@ -57,10 +69,10 @@ Example:
 
 ## How it works
 
-1. Home Assistant creates weathercam snapshots during the day.
-2. The **Weathercam Timelapse** app builds the daily video and thumbnail.
-3. The **Weathercam Calendar** app automatically scans the timelapse folders.
-4. New **years**, **months**, and **days** appear in the calendar UI the next time the app UI is opened or refreshed.
+1. Home Assistant creates weather camera snapshots during the day
+2. **Weathercam Timelapse** builds the daily MP4 and thumbnail
+3. **Weathercam Calendar** scans the timelapse archive automatically
+4. New **years**, **months**, and **days** appear automatically the next time the app UI is opened or refreshed
 
 No manual month or year maintenance is required.
 
@@ -68,236 +80,199 @@ No manual month or year maintenance is required.
 
 ## Installation
 
-## Step 1: Put this repository on GitHub
-
-Create a GitHub repository and upload the contents of this folder.
-
-Important:
-Update the `url:` in `repository.yaml` to your real GitHub repository URL.
-
-Example:
-
-```yaml
-url: https://github.com/<your-user>/<your-repo>
-```
-
----
-
-## Step 2: Add the repository to Home Assistant
-
-In Home Assistant:
-
-1. Open **Settings → Apps → App Store**
+1. In Home Assistant, open **Settings → Apps → App Store**
 2. Open the menu in the top right
 3. Choose **Repositories**
-4. Add your GitHub repository URL
+4. Add this repository URL:
 
-After that, both apps should appear:
+   `https://github.com/Wolfriserio/weathercam-ha-apps`
+
+5. Refresh the App Store
+
+After that, these apps should appear:
 - **Weathercam Timelapse**
 - **Weathercam Calendar**
 
 ---
 
-## Step 3: Install the apps
+## Recommended install order
 
-Install both apps in this order:
-
-1. **Weathercam Timelapse**
-2. **Weathercam Calendar**
+1. Install **Weathercam Timelapse**
+2. Install **Weathercam Calendar**
 
 ---
 
-## Step 4: Configure the apps
+## Initial setup
 
 ### Weathercam Timelapse
-Recommended defaults:
+Set up your snapshot workflow so that daily videos are written to:
 
-- `date`: leave empty
-- `framerate`: `12`
-- `min_images`: `10`
-
-### Weathercam Calendar
-Recommended defaults:
-
-- `root_dir`: `/media/weathercam/timelapse`
-- `title`: `Weathercam Timelapse`
-
----
-
-## Home Assistant automation example
-
-The apps do **not** create snapshots by themselves.
-You still need a normal Home Assistant automation that stores snapshots from your camera.
-
-### Snapshot automation example
-
-```yaml
-- id: weathercam_snapshot_every_5_min
-  alias: Weathercam Snapshot every 5 minutes
-  mode: single
-  trigger:
-    - platform: time_pattern
-      minutes: "/5"
-  action:
-    - variables:
-        folder_date: "{{ now().strftime('%Y-%m-%d') }}"
-        file_ts: "{{ now().strftime('%Y%m%d_%H%M%S') }}"
-    - action: shell_command.prepare_weathercam_dir
-      data:
-        folder: "{{ folder_date }}"
-    - action: camera.snapshot
-      target:
-        entity_id: camera.your_weathercam
-      data:
-        filename: "/media/weathercam/snapshots/{{ folder_date }}/weathercam_{{ file_ts }}.jpg"
+```text
+/media/weathercam/timelapse/YYYY/MM/DD.mp4
 ```
-
-### Daily timelapse build example
-
-```yaml
-- id: weathercam_build_daily_timelapse
-  alias: Weathercam Timelapse build daily
-  mode: single
-  trigger:
-    - platform: time
-      at: "23:59:00"
-  action:
-    - action: hassio.app_start
-      data:
-        app: local_weathercam_timelapse
-```
-
-### Cleanup example
-
-```yaml
-- id: weathercam_cleanup_files
-  alias: Weathercam Timelapse Cleanup
-  mode: single
-  trigger:
-    - platform: time
-      at: "00:20:00"
-  action:
-    - action: shell_command.cleanup_weathercam_timelapse
-```
-
-Note:
-If the app is installed from a GitHub repository, the app slug may differ from `local_weathercam_timelapse` depending on the repository slug.
-
----
-
-## Shell commands example
-
-These shell commands are useful in `configuration.yaml`:
-
-```yaml
-ffmpeg:
-
-shell_command:
-  prepare_weathercam_dir: >-
-    mkdir -p /media/weathercam/snapshots/{{ folder }}
-  cleanup_weathercam_timelapse: >-
-    find /media/weathercam/snapshots -mindepth 1 -maxdepth 1 -type d -mtime +30 -exec rm -rf {} \; &&
-    find /media/weathercam/timelapse -type f -name '*.mp4' -mtime +365 -delete &&
-    find /media/weathercam/timelapse -type f -name '*.jpg' -mtime +365 -delete
-```
-
----
-
-## Calendar app behavior
-
-The calendar app scans the timelapse directory dynamically.
-
-That means:
-- when a new **year folder** appears, it becomes selectable
-- when a new **month folder** appears, it becomes selectable
-- when a new **day video** appears, that day becomes active in the calendar
-
-Usually a simple reload of the app UI is enough to see new content.
-
----
-
-## Notes about thumbnails
-
-Thumbnails are stored next to the MP4 files as `.jpg` files.
 
 Example:
+
+```text
+/media/weathercam/timelapse/2026/04/21.mp4
+```
+
+Optional thumbnails can be stored next to the video:
+
+```text
+/media/weathercam/timelapse/YYYY/MM/DD.jpg
+```
+
+### Weathercam Calendar
+Open the app configuration and keep the default path unless you use a custom location:
+
+```text
+/media/weathercam/timelapse
+```
+
+The calendar app scans this folder structure automatically.  
+New years, months, and days appear automatically after reopening or refreshing the app.
+
+---
+
+## Notes
+
+- The calendar only highlights days where a matching `.mp4` file exists
+- If a matching `.jpg` file exists, it is used as the preview thumbnail
+- The built-in popup player plays videos directly inside Home Assistant
+
+---
+
+# Deutsch
+
+## Überblick
+
+Dieses Repository enthält zwei Apps für Home Assistant:
+
+### 1. Weathercam Timelapse
+Erstellt aus Wetterkamera-Snapshots einen täglichen Zeitraffer und speichert ihn in einer sauberen Archivstruktur.
+
+**Funktionen**
+- erstellt **eine MP4-Datei pro Tag**
+- erstellt **ein JPG-Vorschaubild pro Tag**
+- unterstützt eine konfigurierbare Mindestanzahl an Bildern
+- funktioniert sehr gut mit 5-Minuten-Snapshot-Automationen
+- speichert die Ausgabe strukturiert nach **Jahr / Monat / Tag**
+
+### 2. Weathercam Calendar
+Stellt eine integrierte **Ingress-Oberfläche innerhalb von Home Assistant** zum Durchsuchen der Zeitraffer bereit.
+
+**Funktionen**
+- **Jahresauswahl**
+- **Monatsauswahl**
+- anklickbare **Kalenderansicht**
+- Video-Popup-Player
+- Download-Button
+- Tages-Vorschaubilder
+- Schnellzugriff auf den **zuletzt verfügbaren Tag**
+
+---
+
+## Erwartete Ordnerstruktur
+
+### Eingangs-Snapshots
+
+```text
+/media/weathercam/snapshots/YYYY-MM-DD/*.jpg
+```
+
+Beispiel:
+
+```text
+/media/weathercam/snapshots/2026-04-21/weathercam_20260421_120000.jpg
+```
+
+### Zeitraffer-Ausgabe
+
+```text
+/media/weathercam/timelapse/YYYY/MM/DD.mp4
+/media/weathercam/timelapse/YYYY/MM/DD.jpg
+```
+
+Beispiel:
 
 ```text
 /media/weathercam/timelapse/2026/04/21.mp4
 /media/weathercam/timelapse/2026/04/21.jpg
 ```
 
-The calendar UI automatically uses the thumbnail if present.
-If no thumbnail exists, the day remains clickable but shows no preview image.
+---
+
+## So funktioniert es
+
+1. Home Assistant erstellt tagsüber Wetterkamera-Snapshots
+2. **Weathercam Timelapse** baut daraus die tägliche MP4-Datei und das Vorschaubild
+3. **Weathercam Calendar** liest das Zeitraffer-Archiv automatisch ein
+4. Neue **Jahre**, **Monate** und **Tage** erscheinen automatisch, sobald die App-Oberfläche neu geöffnet oder aktualisiert wird
+
+Eine manuelle Pflege von Monaten oder Jahren ist nicht nötig.
 
 ---
 
-## Recommended use case
+## Installation
 
-This package is ideal for:
-- weather stations
-- garden cameras
-- skyline cameras
-- roof cameras
-- cloud movement timelapses
-- sunrise / sunset monitoring
+1. In Home Assistant **Einstellungen → Apps → App Store** öffnen
+2. Das Menü oben rechts öffnen
+3. **Repositories** auswählen
+4. Diese Repository-URL hinzufügen:
 
----
+   `https://github.com/Wolfriserio/weathercam-ha-apps`
 
-## Troubleshooting
+5. Den App Store aktualisieren
 
-### The calendar says “Keine Timelapse-Videos gefunden”
-Check these points:
-- `root_dir` in **Weathercam Calendar** is correct
-- the folder contains files in `YYYY/MM/DD.mp4`
-- the app was rebuilt after file changes
-- the app log shows the correct path
-
-### The timelapse app starts but no video is created
-Check these points:
-- enough snapshots exist for the day
-- `min_images` is not too high
-- the snapshot folder name matches `YYYY-MM-DD`
-- the app log shows the detected image count
-
-### A new month does not appear
-Usually reloading or reopening the calendar UI is enough.
-If needed:
-- restart the app
-- rebuild the app
+Danach sollten diese Apps erscheinen:
+- **Weathercam Timelapse**
+- **Weathercam Calendar**
 
 ---
 
-## Repository contents
+## Empfohlene Installationsreihenfolge
+
+1. Zuerst **Weathercam Timelapse** installieren
+2. Danach **Weathercam Calendar** installieren
+
+---
+
+## Erste Einrichtung
+
+### Weathercam Timelapse
+Richte deinen Snapshot-Workflow so ein, dass die Tagesvideos hier abgelegt werden:
 
 ```text
-repository.yaml
-weathercam_timelapse/
-weathercam_calendar/
-README.md
-LICENSE
+/media/weathercam/timelapse/YYYY/MM/DD.mp4
 ```
 
+Beispiel:
+
+```text
+/media/weathercam/timelapse/2026/04/21.mp4
+```
+
+Optionale Vorschaubilder können direkt daneben gespeichert werden:
+
+```text
+/media/weathercam/timelapse/YYYY/MM/DD.jpg
+```
+
+### Weathercam Calendar
+In der App-Konfiguration kann der Standardpfad in der Regel unverändert bleiben:
+
+```text
+/media/weathercam/timelapse
+```
+
+Die Kalender-App liest diese Ordnerstruktur automatisch ein.  
+Neue Jahre, Monate und Tage erscheinen automatisch, sobald die App neu geöffnet oder aktualisiert wird.
+
 ---
 
-## Roadmap ideas
+## Hinweise
 
-Possible future improvements:
-- smarter thumbnail selection
-- weather data overlay in timelapses
-- direct month statistics
-- thumbnail generation from video frames
-- multiple camera support
-- automatic pruning rules in the UI
-
----
-
-## License
-
-This repository includes an MIT license.
-
----
-
-## Credits
-
-Built for Home Assistant users who want a clean self-hosted alternative to limited cloud timelapse archives.
+- Im Kalender werden nur Tage hervorgehoben, an denen eine passende `.mp4`-Datei vorhanden ist
+- Wenn zusätzlich eine passende `.jpg`-Datei vorhanden ist, wird sie als Vorschaubild verwendet
+- Das integrierte Video-Popup spielt die Dateien direkt innerhalb von Home Assistant ab
